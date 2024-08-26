@@ -8,7 +8,7 @@ export const routes = [
   {
     path: '/home',
     name: 'Home',
-    component: () => import('@/pages/index.vue'),
+    component: () => import('@/pages/Dashboard.vue'),
     meta: { requiresAuth: true }
   },
 ];
