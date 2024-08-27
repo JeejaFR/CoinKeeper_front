@@ -1,156 +1,70 @@
 <template>
   <div style="padding: 2%;">
-    <v-data-table-server
-      v-model:items-per-page="itemsPerPage"
-      :headers="headers"
-      :items="serverItems"
-      :items-length="totalItems"
-      :loading="loading"
-      item-value="name"
-      @update:options="loadItems"
-    ></v-data-table-server>
+    <v-data-table v-model:items-per-page="itemsPerPage" :headers="headers" :items="paginatedTransactions"
+      :items-length="transactions.length" :loading="loading" @update:options="loadItems"></v-data-table>
   </div>
 </template>
 
-<script>
-  const desserts = [
-    {
-      name: 'Frozen Yogurt',
-      calories: 159,
-      fat: 6.0,
-      carbs: 24,
-      protein: 4.0,
-      iron: '1',
-    },
-    {
-      name: 'Jelly bean',
-      calories: 375,
-      fat: 0.0,
-      carbs: 94,
-      protein: 0.0,
-      iron: '0',
-    },
-    {
-      name: 'KitKat',
-      calories: 518,
-      fat: 26.0,
-      carbs: 65,
-      protein: 7,
-      iron: '6',
-    },
-    {
-      name: 'Eclair',
-      calories: 262,
-      fat: 16.0,
-      carbs: 23,
-      protein: 6.0,
-      iron: '7',
-    },
-    {
-      name: 'Gingerbread',
-      calories: 356,
-      fat: 16.0,
-      carbs: 49,
-      protein: 3.9,
-      iron: '16',
-    },
-    {
-      name: 'Ice cream sandwich',
-      calories: 237,
-      fat: 9.0,
-      carbs: 37,
-      protein: 4.3,
-      iron: '1',
-    },
-    {
-      name: 'Lollipop',
-      calories: 392,
-      fat: 0.2,
-      carbs: 98,
-      protein: 0,
-      iron: '2',
-    },
-    {
-      name: 'Cupcake',
-      calories: 305,
-      fat: 3.7,
-      carbs: 67,
-      protein: 4.3,
-      iron: '8',
-    },
-    {
-      name: 'Honeycomb',
-      calories: 408,
-      fat: 3.2,
-      carbs: 87,
-      protein: 6.5,
-      iron: '45',
-    },
-    {
-      name: 'Donut',
-      calories: 452,
-      fat: 25.0,
-      carbs: 51,
-      protein: 4.9,
-      iron: '22',
-    },
-  ]
+<script setup>
+import { ref, watch, computed } from 'vue';
 
-  const FakeAPI = {
-    async fetch ({ page, itemsPerPage, sortBy }) {
-      return new Promise(resolve => {
-        setTimeout(() => {
-          const start = (page - 1) * itemsPerPage
-          const end = start + itemsPerPage
-          const items = desserts.slice()
+// Props reçues du parent
+const props = defineProps({
+  transactions: {
+    type: Array,
+    required: true,
+  },
+});
 
-          if (sortBy.length) {
-            const sortKey = sortBy[0].key
-            const sortOrder = sortBy[0].order
-            items.sort((a, b) => {
-              const aValue = a[sortKey]
-              const bValue = b[sortKey]
-              return sortOrder === 'desc' ? bValue - aValue : aValue - bValue
-            })
-          }
+const itemsPerPage = ref(5);
+const headers = ref([
+  {
+    title: 'Description',
+    align: 'start',
+    sortable: true,
+    key: 'description',
+  },
+  { title: 'Montant (€)', key: 'amount', align: 'end', sortable: true },
+  { title: 'Catégorie', key: 'category', align: 'end', sortable: true },
+  { title: 'Date', key: 'date', align: 'end', sortable: true },
+]);
 
-          const paginated = items.slice(start, end)
+const loading = ref(false);
+const page = ref(1);
+const sortBy = ref([]);
 
-          resolve({ items: paginated, total: items.length })
-        }, 500)
-      })
-    },
+// Calcul des transactions paginées et triées
+const paginatedTransactions = computed(() => {
+  let items = [...props.transactions];
+
+  // Tri des éléments si nécessaire
+  if (sortBy.value.length) {
+    const sortKey = sortBy.value[0].key;
+    const sortOrder = sortBy.value[0].order;
+    items.sort((a, b) => {
+      const aValue = a[sortKey];
+      const bValue = b[sortKey];
+      return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
+    });
   }
 
-  export default {
-    data: () => ({
-      itemsPerPage: 5,
-      headers: [
-        {
-          title: 'Dessert (100g serving)',
-          align: 'start',
-          sortable: false,
-          key: 'name',
-        },
-        { title: 'Calories', key: 'calories', align: 'end' },
-        { title: 'Fat (g)', key: 'fat', align: 'end' },
-        { title: 'Carbs (g)', key: 'carbs', align: 'end' },
-        { title: 'Protein (g)', key: 'protein', align: 'end' },
-        { title: 'Iron (%)', key: 'iron', align: 'end' },
-      ],
-      serverItems: [],
-      loading: true,
-      totalItems: 0,
-    }),
-    methods: {
-      loadItems ({ page, itemsPerPage, sortBy }) {
-        this.loading = true
-        FakeAPI.fetch({ page, itemsPerPage, sortBy }).then(({ items, total }) => {
-          this.serverItems = items
-          this.totalItems = total
-          this.loading = false
-        })
-      },
-    },
+  const start = (page.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return items.slice(start, end);
+});
+
+// Fonction pour charger les éléments
+function loadItems(options) {
+  page.value = options.page;
+  itemsPerPage.value = options.itemsPerPage;
+  sortBy.value = options.sortBy;
+}
+
+// Watcher pour détecter les changements dans les transactions
+watch(
+  () => props.transactions,
+  () => {
+    loadItems({ page: 1, itemsPerPage: itemsPerPage.value, sortBy: [] });
   }
+);
 </script>

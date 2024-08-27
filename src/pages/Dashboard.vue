@@ -1,9 +1,11 @@
 <template>
   <section class="dashboardContainer">
+    <AppBar />
     <div class="dashBoardTitle">
       <h1>Tableau de bord</h1>
       <div class="selectContainer">
-        <v-select v-model="selectedPeriod" :items="periodOptions" label="Période" variant="solo" dense class="custom-select">
+        <v-select v-model="selectedPeriod" :items="periodOptions" label="Période" variant="solo" dense
+          class="custom-select">
           <v-list-item ripple @click="clearSelection">
             <v-list-item-content>
               <v-list-item-title>Tout</v-list-item-title>
@@ -15,47 +17,49 @@
     <div class="flex">
       <v-row>
         <v-col cols="12" sm="6" md="6" lg="6">
-          <LittleCard title="Total dépenses" floatValue="1234.56€" trendIcon="mdi-trending-down" trendValue="-1.3%"
+          <LittleCard title="Total dépenses" :floatValue="totalAmount+'€'" trendIcon="mdi-trending-down" trendValue="-99%"
             description="Depuis le mois dernier" />
         </v-col>
         <v-col cols="12" sm="6" md="6" lg="6">
-          <LittleCard title="Nombre de dépenses" floatValue="30" trendIcon="mdi-trending-up" trendValue="1.3%"
+          <LittleCard title="Nombre de dépenses" :floatValue="transactions.length" trendIcon="mdi-trending-up" trendValue="99%"
             description="Depuis le mois dernier" />
         </v-col>
         <v-col cols="12" sm="6" md="6" lg="6">
-          <LittleCard title="Répartition des dépenses" floatValue="45%" trendIcon="mdi-trending-down" trendValue="-0.7%"
+          <LittleCard title="Répartition des dépenses" floatValue="-000%" trendIcon="mdi-trending-down" trendValue="-99%"
             description="Depuis le mois dernier" />
         </v-col>
         <v-col cols="12" sm="6" md="6" lg="6">
-          <LittleCard title="Épargne" floatValue="567.89€" trendIcon="mdi-trending-up" trendValue="2.5%"
+          <LittleCard title="Épargne" floatValue="-000€" trendIcon="mdi-trending-up" trendValue="99%"
             description="Depuis le mois dernier" />
         </v-col>
       </v-row>
       <div class="sparklineContainer">
-        <LineChart />
+        <LineChart :transactions="transactions" :period="selectedPeriod"/>
       </div>
     </div>
     <div class="flex secondContainer">
       <v-card class="dataTable">
-        <v-card-title>Mes dernières dépenses</v-card-title>
+        <v-card-title>Mes dépenses</v-card-title>
         <div class="dataTableContainer">
-          <DataTable />
+          <DataTable :transactions="transactions"/>
         </div>
       </v-card>
       <v-card class="categoryChart">
         <v-card-title>Dépenses par catégorie</v-card-title>
-        <DonutChart />
+        <DonutChart :transactions="transactions"/>
       </v-card>
     </div>
   </section>
 </template>
 
 <script setup>
+import { ref, onMounted, watch } from 'vue';
 import LittleCard from '@/components/LittleCard.vue';
 import LineChart from '@/components/LineChart.vue';
 import DonutChart from '@/components/DonutChart.vue';
-import DataTable from '@/components/DataTable.vue'
-import { ref } from 'vue';
+import DataTable from '@/components/DataTable.vue';
+import AppBar from '@/components/AppBar.vue';
+import transactionService from '@/services/transactionService.js';
 
 const periodOptions = [
   'Cette semaine',
@@ -68,27 +72,47 @@ const periodOptions = [
 
 const selectedPeriod = ref('Cette semaine');
 
+const transactions = ref([]);
+const totalAmount = ref(0);
+
 function clearSelection() {
   selectedPeriod.value = 'Cette semaine';
 }
+
+async function getTransactionByPeriode() {
+  try {
+    const response = await transactionService.getTransactionParPeriode(selectedPeriod.value);
+    transactions.value = response; 
+    totalAmount.value = transactions.value.reduce((sum, transaction) => sum + transaction.amount, 0);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des transactions:', error);
+  }
+}
+
+onMounted(() => {
+  getTransactionByPeriode();
+});
+
+watch(selectedPeriod, () => {
+  getTransactionByPeriode();
+});
 </script>
+
 
 <style scoped>
 .selectContainer {
-  width: 25%;
-  /* Ajuste selon les besoins */
+  margin-top: 2rem;
+  width: 20%;
 }
 
 .custom-select {
   min-width: 200px;
-  /* Largeur minimale */
 }
 
 .dashBoardTitle {
   display: flex;
   gap: 2rem;
   font-size: 2rem;
-  margin-bottom: 2rem;
   justify-content: space-between;
 }
 
@@ -96,10 +120,6 @@ function clearSelection() {
   display: flex;
   gap: 2rem;
   justify-content: center;
-}
-
-.selectContainer {
-  width: 20%;
 }
 
 .secondContainer {
@@ -119,6 +139,6 @@ function clearSelection() {
 }
 
 .dashboardContainer {
-  padding: 2rem;
+  padding: 0rem 2rem 2rem 2rem;
 }
 </style>
