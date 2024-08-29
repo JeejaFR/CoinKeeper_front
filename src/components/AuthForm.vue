@@ -100,7 +100,6 @@ function showErrorMessage() {
 
 async function login() {
   formSubmitted.value = true;
-  // Valide les champs avant d'envoyer la requête
   if (emailErrors.value.length) {
     showErrorMessage();
     return;
@@ -125,7 +124,6 @@ async function login() {
 
 async function register() {
   formSubmitted.value = true;
-  // Valide les champs avant d'envoyer la requête
   if (emailErrors.value.length || passwordErrors.value.length || confirmPasswordErrors.value.length) {
     return;
   }
@@ -139,9 +137,7 @@ async function register() {
     const data = await authService.register(payload);
     
     if (data.body.token) {
-      // Stocke le token dans le localStorage
       localStorage.setItem('authToken', data.token);
-      // Redirige vers la page d'accueil ou une autre page protégée
       router.push({ name: 'Home' });
     }
   } catch (error) {
@@ -161,7 +157,6 @@ async function register() {
 }
 
 function forgotPassword() {
-  // Implémente la logique pour la récupération de mot de passe ici
   console.log('Mot de passe oublié ?');
 }
 </script>

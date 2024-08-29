@@ -1,13 +1,12 @@
 <template>
   <v-card class="sideBarContainer">
     <v-navigation-drawer v-model="drawer" temporary>
-
       <v-toolbar flat class="toolbar">
-        <v-icon class="mdi mdi-bitcoin"></v-icon>
-        <h2 class="toolbarTitle">CoinKeeper</h2>
-        <v-fab class="closeButton" icon="mdi-backburger" @click.stop="drawer = !drawer" variant="plain"></v-fab>
+        <v-icon class="mdi mdi-bitcoin text-primary"></v-icon>
+        <v-card-title class="text-primary">CoinKeeper</v-card-title>
+        <v-fab class="closeButton text-primary" icon="mdi-backburger" @click.stop="closeDrawer" variant="plain"></v-fab>
       </v-toolbar>
-
+      <v-divider class="navlist"></v-divider>
       <v-list density="compact" nav>
         <v-list-item 
           prepend-icon="mdi-view-dashboard" 
@@ -22,27 +21,19 @@
       </v-list>
 
       <v-divider></v-divider>
-
-      <div class="spacer"></div>
-      <v-list-item 
-        prepend-avatar="https://randomuser.me/api/portraits/men/78.jpg" 
-        title="John Leider">
-      </v-list-item>
     </v-navigation-drawer>
   </v-card>
 
   <div :class="drawer ? 'displayNone' : 'toggleButton'">
-    <v-fab icon="mdi-forwardburger" @click.stop="drawer = !drawer"></v-fab>
-  </div>
-
-  <div class="routerContainer" :class="drawer ? 'small-router' : ''">
-    <router-view />
+    <v-fab icon="mdi-forwardburger" @click.stop="openDrawer"></v-fab>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref,defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
+
+const emit = defineEmits(['open']);
 
 const drawer = ref(false);
 const router = useRouter();
@@ -50,12 +41,23 @@ const router = useRouter();
 function navigateTo(route) {
   router.push({ name: route });
 }
+function openDrawer(){
+  emit('open');
+  drawer.value = true;
+}
+function closeDrawer(){
+  emit('close');
+  drawer.value = false;
+}
 </script>
 
 
 <style scoped>
+.navlist{
+  margin-top: 2rem;
+}
 .toolbarTitle{
-  margin: 0.3rem
+  margin: 0.3rem;
 }
 .displayNone {
   display: none;

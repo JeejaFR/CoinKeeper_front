@@ -1,11 +1,22 @@
 <template>
   <v-app>
-    <v-main>
-      <SideBar />
+    <v-main :class="theme.global.current.value.dark ? 'darkMain': 'lightMain'">
+      <router-view />
     </v-main>
   </v-app>
 </template>
 
 <script setup>
-  import SideBar from '@/components/SideBar.vue'
+  import { useTheme } from 'vuetify'
+
+  const theme = useTheme()
 </script>
+
+<style>
+.darkMain{
+  background-color: rgb(25,25,25);
+}
+.lightMain{
+  background-color: rgb(245,245,245);
+}
+</style>

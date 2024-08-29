@@ -12,6 +12,8 @@
     "axios": "^1.7.5",
     "chart.js": "^4.4.4",
     "core-js": "^3.37.1",
+    "date-fns": "^3.6.0",
+    "jwt-decode": "^4.0.0",
     "roboto-fontface": "*",
     "vue": "^3.4.31",
     "vue-chartjs": "^5.3.1",

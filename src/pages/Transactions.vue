@@ -1,5 +1,6 @@
 <template>
-  <section class="transactionsContainer">
+  <SideBar @open="drawer=true;" @close="drawer=false"/>
+  <section class="transactionsContainer" :class="drawer?'littleContainer':''">
     <AppBar />
     <div class="transactionTitle">
       <h1>Dépenses</h1>
@@ -39,6 +40,7 @@ const periodOptions = [
 
 const selectedPeriod = ref('Cette semaine');
 
+const drawer = ref(false);
 const transactions = ref([]);
 const totalAmount = ref(0);
 
@@ -66,8 +68,13 @@ watch(selectedPeriod, () => {
 </script>
 
 <style scoped>
+.littleContainer{
+  width: 85%;
+  margin-left: 16%;
+}
 .transactionsContainer {
   padding: 0rem 2rem 2rem 2rem;
+  transition: margin-left 0.2s ease, width 0.2s ease;
 }
 .transactionTitle{
   display: flex;

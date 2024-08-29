@@ -1,11 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router/auto";
 import { routes } from "./routes";
 
-// Fonction pour vérifier si l'utilisateur est authentifié
-const isAuthenticated = () => {
-  return localStorage.getItem("authToken") !== null;
-};
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
@@ -16,7 +11,7 @@ router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem('authToken');
 
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next({ name: 'Login' });
+    next({ name: 'Auth' });
   } else if (to.meta.requiresGuest && isAuthenticated) {
     next({ name: 'Home' });
   } else {

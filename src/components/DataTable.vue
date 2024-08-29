@@ -1,12 +1,22 @@
 <template>
   <div style="padding: 2%;">
     <v-data-table v-model:items-per-page="itemsPerPage" :headers="headers" :items="paginatedTransactions"
-      :items-length="transactions.length" :loading="loading" @update:options="loadItems"></v-data-table>
+      :items-length="transactions.length" :loading="loading" @update:options="loadItems">
+      <template v-slot:item.amount="{ item }">
+        <span>{{ formatAmount(item.amount) }}€</span>
+      </template>
+
+      <template v-slot:item.date="{ item }">
+        <span>{{ formatDate(item.date) }}</span>
+      </template>
+    </v-data-table>
   </div>
 </template>
 
 <script setup>
 import { ref, watch, computed } from 'vue';
+import { parse, format } from 'date-fns';
+
 
 // Props reçues du parent
 const props = defineProps({
@@ -58,6 +68,20 @@ function loadItems(options) {
   page.value = options.page;
   itemsPerPage.value = options.itemsPerPage;
   sortBy.value = options.sortBy;
+}
+function formatDate(dateString) {
+  return format(new Date(dateString), 'dd/MM/yyyy');
+}
+function formatAmount(amount) {
+  const formatter = new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  const formattedAmount = formatter.format(amount);
+
+  return formattedAmount.endsWith('.00') ? formattedAmount.slice(0, -3) : formattedAmount;
+
 }
 
 // Watcher pour détecter les changements dans les transactions

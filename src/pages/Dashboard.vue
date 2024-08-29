@@ -1,5 +1,6 @@
 <template>
-  <section class="dashboardContainer">
+  <SideBar @open="drawer = true;" @close="drawer = false" />
+  <section class="dashboardContainer" :class="drawer ? 'littleContainer' : ''">
     <AppBar />
     <div class="dashBoardTitle">
       <h1>Tableau de bord</h1>
@@ -17,16 +18,16 @@
     <div class="flex">
       <v-row>
         <v-col cols="12" sm="6" md="6" lg="6">
-          <LittleCard title="Total dépenses" :floatValue="totalAmount+'€'" trendIcon="mdi-trending-down" trendValue="-99%"
-            description="Depuis le mois dernier" />
+          <LittleCard title="Total dépenses" :floatValue="totalAmount + '€'" trendIcon="mdi-trending-down"
+            trendValue="-99%" description="Depuis le mois dernier" />
         </v-col>
         <v-col cols="12" sm="6" md="6" lg="6">
-          <LittleCard title="Nombre de dépenses" :floatValue="transactions.length" trendIcon="mdi-trending-up" trendValue="99%"
-            description="Depuis le mois dernier" />
+          <LittleCard title="Nombre de dépenses" :floatValue="transactions.length" trendIcon="mdi-trending-up"
+            trendValue="99%" description="Depuis le mois dernier" />
         </v-col>
         <v-col cols="12" sm="6" md="6" lg="6">
-          <LittleCard title="Répartition des dépenses" floatValue="-000%" trendIcon="mdi-trending-down" trendValue="-99%"
-            description="Depuis le mois dernier" />
+          <LittleCard title="Répartition des dépenses" floatValue="-000%" trendIcon="mdi-trending-down"
+            trendValue="-99%" description="Depuis le mois dernier" />
         </v-col>
         <v-col cols="12" sm="6" md="6" lg="6">
           <LittleCard title="Épargne" floatValue="-000€" trendIcon="mdi-trending-up" trendValue="99%"
@@ -34,19 +35,19 @@
         </v-col>
       </v-row>
       <div class="sparklineContainer">
-        <LineChart :transactions="transactions" :period="selectedPeriod"/>
+        <LineChart :transactions="transactions" :period="selectedPeriod" />
       </div>
     </div>
     <div class="flex secondContainer">
       <v-card class="dataTable">
         <v-card-title>Mes dépenses</v-card-title>
         <div class="dataTableContainer">
-          <DataTable :transactions="transactions"/>
+          <DataTable :transactions="transactions" />
         </div>
       </v-card>
       <v-card class="categoryChart">
         <v-card-title>Dépenses par catégorie</v-card-title>
-        <DonutChart :transactions="transactions"/>
+        <DonutChart :transactions="transactions" />
       </v-card>
     </div>
   </section>
@@ -71,7 +72,7 @@ const periodOptions = [
 ];
 
 const selectedPeriod = ref('Cette semaine');
-
+const drawer = ref(false);
 const transactions = ref([]);
 const totalAmount = ref(0);
 
@@ -82,7 +83,7 @@ function clearSelection() {
 async function getTransactionByPeriode() {
   try {
     const response = await transactionService.getTransactionParPeriode(selectedPeriod.value);
-    transactions.value = response; 
+    transactions.value = response;
     totalAmount.value = transactions.value.reduce((sum, transaction) => sum + transaction.amount, 0);
   } catch (error) {
     console.error('Erreur lors de la récupération des transactions:', error);
@@ -100,6 +101,11 @@ watch(selectedPeriod, () => {
 
 
 <style scoped>
+.littleContainer {
+  width: 85%;
+  margin-left: 16%;
+}
+
 .selectContainer {
   margin-top: 2rem;
   width: 20%;
@@ -140,5 +146,6 @@ watch(selectedPeriod, () => {
 
 .dashboardContainer {
   padding: 0rem 2rem 2rem 2rem;
+  transition: margin-left 0.2s ease, width 0.2s ease;
 }
 </style>
