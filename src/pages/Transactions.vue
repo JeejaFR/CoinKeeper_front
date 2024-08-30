@@ -24,10 +24,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import DataTable from '@/components/DataTableCrud.vue';
 import AppBar from '@/components/AppBar.vue';
 import transactionService from '@/services/transactionService.js';
+
 
 const periodOptions = [
   'Cette semaine',

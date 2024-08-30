@@ -37,7 +37,7 @@ const transactionService = {
       );
       return response.data;
     } catch (error) {
-      console.error("Erreur lors de la réccupération des transactions", error);
+      console.error("Erreur lors de la récupération des transactions", error);
       throw error;
     }
   },

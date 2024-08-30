@@ -1,32 +1,21 @@
 <template>
-  <v-data-table
-    :headers="headers"
-    :items="filteredTransactions"
-    item-key="id"
-    show-select
-    v-model="selectedItems"
-  >
+  <v-data-table :headers="headers" :items="filteredTransactions" item-key="id" show-select v-model="selectedItems">
     <template v-slot:top>
       <!-- Toolbar for Actions -->
       <v-toolbar flat>
-        <v-toolbar-title>Gestion des Dépenses {{ selectedItems.length > 1 ? '(' + selectedItems.length + ' sélectionnées)' : ''}}  </v-toolbar-title>
+        <v-toolbar-title>Gestion des Dépenses {{ selectedItems.length > 1 ? '(' + selectedItems.length + 'sélectionnées) ' : ''}} </v-toolbar-title>
         <v-spacer></v-spacer>
 
         <!-- Add New Transaction Button -->
         <v-dialog v-model="dialog" max-width="500px">
           <template v-slot:activator="{ props }">
-            <v-btn class="mb-2" color="primary" dark v-bind="props" @click="openForm()" :disabled="selectedItems.length > 0">
+            <v-btn class="mb-2" color="primary" dark v-bind="props" @click="openForm()"
+              :disabled="selectedItems.length > 0">
               Ajouter une dépense
             </v-btn>
           </template>
-          <TransactionsForm
-            :editedItem="editedItem"
-            :editedIndex="editedIndex"
-            :categories="uniqueCategories"
-            @create="createTransaction"
-            @update="updateTransaction"
-            @close="closeForm"
-          />
+          <TransactionsForm :editedItem="editedItem" :editedIndex="editedIndex" :categories="uniqueCategories"
+            @create="createTransaction" @update="updateTransaction" @close="closeForm" />
         </v-dialog>
 
         <!-- Edit Selected Transactions Button -->
@@ -44,15 +33,8 @@
 
       <!-- Filtres de Recherche -->
       <div class="filter-container">
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="Recherche"
-          single-line
-          variant="outlined"
-          hide-details
-          class="search-bar"
-        ></v-text-field>
+        <v-text-field v-model="search" append-icon="mdi-magnify" label="Recherche" single-line variant="outlined"
+          hide-details class="search-bar"></v-text-field>
         <v-divider class="mx-4" inset vertical></v-divider>
         <div>
           <p style="font-size: 12px; text-decoration: underline; margin-bottom: 8px;">Filtres:</p>
@@ -66,7 +48,7 @@
     </template>
 
     <template v-slot:item.amount="{ item }">
-      <span>{{ formatAmount(item.amount) }}€</span>
+      <AsyncAmount :amount="item.amount" :selectedCurrency="selectedCurrency" />
     </template>
 
     <template v-slot:item.date="{ item }">
@@ -100,9 +82,18 @@
 
 <script setup>
 import { ref, computed, watch, defineProps } from 'vue';
+import { useCurrencyStore } from '@/stores/currencyStore'
 import { parse, format } from 'date-fns';
 import transactionService from '@/services/transactionService';
+import currencyService from '@/services/currencyService.js';
 import TransactionsForm from '@/components/forms/TransactionsForm.vue';
+import AsyncAmount from '@/components/AsyncAmount';
+
+const currencyStore = useCurrencyStore();
+
+const selectedCurrency = computed({
+  get: () => currencyStore.selectedCurrency,
+});
 
 const props = defineProps({
   transactions: {
@@ -131,8 +122,6 @@ const defaultItem = {
 const search = ref('');
 const selectedCategories = ref([]);
 const selectedItems = ref([]);
-const itemsPerPage = ref(10);
-const selectAll = ref(false);
 
 function formatDate(dateString) {
   return format(new Date(dateString), 'dd/MM/yyyy');
@@ -161,7 +150,18 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false },
 ];
 
-function formatAmount(amount) {
+async function formatAmount(amount) {
+  const baseCurrency = '€';
+  console.log("ICI : " + selectedCurrency.value);
+  const rate = await currencyService.getExchangeRate(baseCurrency, selectedCurrency.value)
+
+  console.log('amount: ' + amount);
+  console.log('rate: ' + rate)
+
+  if (rate) {
+    amount = amount * rate;
+  }
+
   const formatter = new Intl.NumberFormat('fr-FR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -172,16 +172,26 @@ function formatAmount(amount) {
   return formattedAmount.endsWith('.00') ? formattedAmount.slice(0, -3) : formattedAmount;
 }
 
-function exportToCSV() {
+async function exportToCSV() {
   const csvRows = [];
 
-  const headers = ['Description', 'Montant', 'Catégorie', 'Date'];
+  const headers = ['Description', `Montant (${selectedCurrency.value})`, 'Catégorie', 'Date'];
   csvRows.push(headers.join(','));
 
   for (const transaction of filteredTransactions.value) {
+    const rate = await currencyService.getExchangeRate('€', selectedCurrency.value);
+    let amount = transaction.amount;
+    if (rate) {
+      amount *= rate;
+    }
+    const formattedAmount = new Intl.NumberFormat('fr-FR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount).replace(/\.00$/, '');
+
     const values = [
       transaction.description,
-      formatAmount(transaction.amount),
+      formattedAmount,
       transaction.category,
       formatDate(transaction.date),
     ];
@@ -199,6 +209,7 @@ function exportToCSV() {
   link.click();
   document.body.removeChild(link);
 }
+
 
 function openForm() {
   creating.value = true;

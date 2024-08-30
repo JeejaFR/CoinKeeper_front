@@ -3,6 +3,9 @@ import axios from 'axios';
 
 const url = 'http://localhost:2000';
 
+
+// TODO Verifier le token a chaque page (savoir s'il est encore bon)
+
 const authService = {
   login: async (payload) => {
     try {

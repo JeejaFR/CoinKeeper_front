@@ -10,10 +10,12 @@
             <v-text-field v-model="editedItem.description" label="Description" :rules="[rules.required]"></v-text-field>
           </v-col>
           <v-col cols="12" md="12" sm="6">
-            <v-text-field v-model="editedItem.amount" label="Montant" type="number" :rules="[rules.required, rules.positive]"></v-text-field>
+            <v-text-field v-model="displayAmount" :label="`Montant (${selectedCurrency})`" type="number"
+              :rules="[rules.required, rules.positive]"></v-text-field>
           </v-col>
           <v-col cols="12" md="6" sm="6">
-            <v-combobox v-model="editedItem.category" label="Catégorie" :items="mergedCategories" :rules="[rules.required]"></v-combobox>
+            <v-combobox v-model="editedItem.category" label="Catégorie" :items="mergedCategories"
+              :rules="[rules.required]"></v-combobox>
           </v-col>
           <v-col cols="12" md="6" sm="6">
             <v-text-field v-model="editedItem.date" label="Date" type="date" :rules="[rules.required]"></v-text-field>
@@ -35,8 +37,10 @@
 </template>
 
 <script setup>
-import { ref, computed, defineEmits, defineProps } from 'vue';
+import { ref, computed, defineEmits, defineProps, watch } from 'vue';
 import transactionService from '@/services/transactionService';
+import currencyService from '@/services/currencyService';
+import { useCurrencyStore } from '@/stores/currencyStore';
 
 const emit = defineEmits(['close', 'create', 'update']);
 
@@ -55,7 +59,12 @@ const props = defineProps({
   },
 });
 
+const currencyStore = useCurrencyStore();
+const selectedCurrency = computed(() => currencyStore.selectedCurrency);
+
 const isNewTransaction = computed(() => props.editedIndex < 0);
+
+const displayAmount = ref(0);
 
 // Catégories par défaut
 const defaultCategories = [
@@ -66,7 +75,7 @@ const defaultCategories = [
   'Santé',
   'Éducation',
   'Vacances',
-  'Autres'
+  'Autres',
 ];
 
 // Fusionner les catégories par défaut avec celles fournies via props
@@ -76,11 +85,22 @@ const mergedCategories = computed(() => {
 });
 
 const rules = {
-  required: value => !!value || 'Ce champ est requis.',
-  positive: value => value > 0 || 'Le montant doit être supérieur à 0.',
+  required: (value) => !!value || 'Ce champ est requis.',
+  positive: (value) => value > 0 || 'Le montant doit être supérieur à 0.',
 };
 
+// Fonction pour convertir le montant en euros dans la devise sélectionnée
+async function convertAmountToSelectedCurrency() {
+  const rate = await currencyService.getExchangeRate('€', selectedCurrency.value);
+  displayAmount.value = (props.editedItem.amount * rate).toFixed(2);
+}
+
+// Appeler la conversion uniquement lors de l'ouverture du formulaire
+watch(() => props.editedItem, convertAmountToSelectedCurrency, { immediate: true });
+
+// Mettre à jour `displayAmount` lors de l'enregistrement sans modifier pendant l'édition
 async function Sauvegarder() {
+  // Validation des champs
   if (
     !props.editedItem.description ||
     !props.editedItem.amount ||
@@ -88,20 +108,24 @@ async function Sauvegarder() {
     !props.editedItem.category ||
     !props.editedItem.date
   ) {
-    alert("Veuillez remplir tous les champs correctement.");
+    alert('Veuillez remplir tous les champs correctement.');
     return;
   }
 
+  // Convertir le montant en euros avant de sauvegarder
+  const rate = await currencyService.getExchangeRate('€',selectedCurrency.value);
+  props.editedItem.amount = (displayAmount.value / rate).toFixed(2);
+
   if (isNewTransaction.value) {
     try {
-      const newTransaction = await transactionService.createTransaction(props.editedItem);
+      const newTransaction = await transactionService.createTransaction({ ...props.editedItem, amount: props.editedItem.amount });
       emit('create', newTransaction);
     } catch (error) {
       console.error('Erreur lors de la création de la transaction:', error);
     }
   } else {
     try {
-      const updatedTransaction = await transactionService.updateTransaction(props.editedItem.id, props.editedItem);
+      const updatedTransaction = await transactionService.updateTransaction(props.editedItem.id, { ...props.editedItem, amount: props.editedItem.amount });
       emit('update', props.editedItem);
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la transaction:', error);

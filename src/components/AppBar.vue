@@ -58,7 +58,7 @@
     <v-menu min-width="200px" rounded>
       <template v-slot:activator="{ props }" class="avatarTemplate">
         <v-btn icon v-bind="props">
-          <v-avatar color="brown" size="large">
+          <v-avatar color="blue" size="large">
             <span class="text-h5">{{ emailInitials }}</span>
           </v-avatar>
         </v-btn>
@@ -66,7 +66,7 @@
       <v-card>
         <v-card-text>
           <div class="mx-auto text-center">
-            <v-avatar color="brown">
+            <v-avatar color="blue">
               <span class="text-h5">{{ emailInitials }}</span>
             </v-avatar>
             <p class="text mt-2">
@@ -87,10 +87,12 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTheme } from 'vuetify'
+import { useCurrencyStore } from '@/stores/currencyStore';
 import authService from '@/services/authService';
 
 const router = useRouter();
-const theme = useTheme()
+const theme = useTheme();
+const currencyStore = useCurrencyStore();
 
 const token = localStorage.getItem("authToken");
 const decodedToken = token ? authService.decodeToken(token) : null;
@@ -98,6 +100,11 @@ const email = decodedToken?.email ?? '';
 
 const emailInitials = computed(() => {
   return email.slice(0, 2).toUpperCase();
+});
+
+const selectedCurrency = computed({
+  get: () => currencyStore.selectedCurrency,
+  set: (value) => currencyStore.setCurrency(value)
 });
 
 const darkTheme = computed(() => {
@@ -111,7 +118,6 @@ const notificationsList = ref([
   { id: 3, title: 'Success Notification', subtitle: 'Operation successful!', icon: 'mdi-check-circle', iconClass: 'text-green' },
 ]);
 
-const selectedCurrency = ref('€');
 const currencies = ['€', '$', '£', '¥'];
 
 function toggleDarkMode() {

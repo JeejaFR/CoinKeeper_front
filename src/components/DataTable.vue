@@ -3,7 +3,7 @@
     <v-data-table v-model:items-per-page="itemsPerPage" :headers="headers" :items="paginatedTransactions"
       :items-length="transactions.length" :loading="loading" @update:options="loadItems">
       <template v-slot:item.amount="{ item }">
-        <span>{{ formatAmount(item.amount) }}€</span>
+        <AsyncAmount :amount="item.amount" :selectedCurrency="selectedCurrency" />
       </template>
 
       <template v-slot:item.date="{ item }">
@@ -16,7 +16,14 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import { parse, format } from 'date-fns';
+import { useCurrencyStore } from '@/stores/currencyStore'
+import AsyncAmount from '@/components/AsyncAmount';
 
+const currencyStore = useCurrencyStore();
+
+const selectedCurrency = computed({
+  get: () => currencyStore.selectedCurrency,
+});
 
 // Props reçues du parent
 const props = defineProps({
@@ -34,7 +41,7 @@ const headers = ref([
     sortable: true,
     key: 'description',
   },
-  { title: 'Montant (€)', key: 'amount', align: 'end', sortable: true },
+  { title: `Montant (${selectedCurrency.value})`, key: 'amount', align: 'end', sortable: true },
   { title: 'Catégorie', key: 'category', align: 'end', sortable: true },
   { title: 'Date', key: 'date', align: 'end', sortable: true },
 ]);

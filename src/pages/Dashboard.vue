@@ -18,8 +18,8 @@
     <div class="flex">
       <v-row>
         <v-col cols="12" sm="6" md="6" lg="6">
-          <LittleCard title="Total dépenses" :floatValue="totalAmount + '€'" trendIcon="mdi-trending-down"
-            trendValue="-99%" description="Depuis le mois dernier" />
+          <LittleCard title="Total dépenses" :floatValue="convertedAmount + `${selectedCurrency}`"
+            trendIcon="mdi-trending-down" trendValue="-99%" description="Depuis le mois dernier" />
         </v-col>
         <v-col cols="12" sm="6" md="6" lg="6">
           <LittleCard title="Nombre de dépenses" :floatValue="transactions.length" trendIcon="mdi-trending-up"
@@ -54,13 +54,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import LittleCard from '@/components/LittleCard.vue';
 import LineChart from '@/components/LineChart.vue';
 import DonutChart from '@/components/DonutChart.vue';
 import DataTable from '@/components/DataTable.vue';
 import AppBar from '@/components/AppBar.vue';
 import transactionService from '@/services/transactionService.js';
+import { useCurrencyStore } from '@/stores/currencyStore';
+import currencyService from '@/services/currencyService.js'; // Un service hypothétique pour obtenir les taux de conversion
+
+const currencyStore = useCurrencyStore();
+
+const selectedCurrency = computed({
+  get: () => currencyStore.selectedCurrency,
+});
 
 const periodOptions = [
   'Cette semaine',
@@ -75,6 +83,7 @@ const selectedPeriod = ref('Cette semaine');
 const drawer = ref(false);
 const transactions = ref([]);
 const totalAmount = ref(0);
+const convertedAmount = ref(0); // Montant converti
 
 function clearSelection() {
   selectedPeriod.value = 'Cette semaine';
@@ -85,8 +94,20 @@ async function getTransactionByPeriode() {
     const response = await transactionService.getTransactionParPeriode(selectedPeriod.value);
     transactions.value = response;
     totalAmount.value = transactions.value.reduce((sum, transaction) => sum + transaction.amount, 0);
+
+    // Convertir le montant total dans la devise sélectionnée
+    await convertCurrency();
   } catch (error) {
     console.error('Erreur lors de la récupération des transactions:', error);
+  }
+}
+
+async function convertCurrency() {
+  try {
+    const rate = await currencyService.getExchangeRate('€', selectedCurrency.value);
+    convertedAmount.value = (totalAmount.value * rate).toFixed(2);
+  } catch (error) {
+    console.error('Erreur lors de la conversion de la devise:', error);
   }
 }
 
@@ -97,7 +118,12 @@ onMounted(() => {
 watch(selectedPeriod, () => {
   getTransactionByPeriode();
 });
+
+watch(selectedCurrency, () => {
+  convertCurrency();
+});
 </script>
+
 
 
 <style scoped>

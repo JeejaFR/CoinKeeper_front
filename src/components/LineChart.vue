@@ -5,12 +5,22 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { Line } from 'vue-chartjs';
 import { Chart as ChartJS, Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement } from 'chart.js';
+import currencyService from '@/services/currencyService.js';
+import { useCurrencyStore } from '@/stores/currencyStore'
+
+const currencyStore = useCurrencyStore();
+
+const selectedCurrency = computed({
+  get: () => currencyStore.selectedCurrency,
+});
+
 
 // Enregistre tous les éléments nécessaires pour le graphique linéaire
 ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement);
+
 
 const props = defineProps({
   transactions: Array,
@@ -57,16 +67,16 @@ const chartOptions = ref({
     y: {
       title: {
         display: true,
-        text: 'Montant (€)'
+        text: 'Montant'
       }
     }
   }
 });
 
 // Met à jour les données du graphique lorsque les transactions ou la période changent
-watch([() => props.transactions, () => props.period], () => {
+watch([() => props.transactions, () => props.period, selectedCurrency], async () => {
   const { transactions, period } = props;
-  const { labels, data } = groupDataByPeriod(transactions, period);
+  const { labels, data } = await groupDataByPeriod(transactions, period);
 
   chartData.value = {
     labels: labels,
@@ -81,7 +91,7 @@ watch([() => props.transactions, () => props.period], () => {
 }, { immediate: true });
 
 // Fonction pour grouper les transactions en fonction de la période sélectionnée
-function groupDataByPeriod(transactions, period) {
+async function groupDataByPeriod(transactions, period) {
   const now = new Date();
   let startDate;
   let endDate;
@@ -123,7 +133,7 @@ function groupDataByPeriod(transactions, period) {
     return acc;
   }, {});
 
-  return getChartDataForPeriod(groupedData, startDate, endDate, period);
+  return await getChartDataForPeriod(groupedData, startDate, endDate, period);
 }
 
 function getStartOfWeek(date) {
@@ -149,25 +159,37 @@ function getLabelForPeriod(date, period) {
   }
 }
 
-function getChartDataForPeriod(groupedData, startDate, endDate, period) {
+async function getChartDataForPeriod(groupedData, startDate, endDate, period) {
   switch (period) {
     case 'Cette semaine':
-      return generateDailyData(groupedData, startDate, 7, true);
+      return await generateDailyData(groupedData, startDate, 7, true);
     case '2 dernières semaines':
-      return generateDailyData(groupedData, startDate, 14, true);
+      return await generateDailyData(groupedData, startDate, 14, true);
     case 'Ce mois-ci':
-      return generateDailyData(groupedData, startDate, new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate(), false);
+      return await generateDailyData(groupedData, startDate, new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate(), false);
     case '6 derniers mois':
-      return generateWeeklyData(groupedData, startDate, endDate);
+      return await generateWeeklyData(groupedData, startDate, endDate);
     case 'Cette année':
     case 'Tout':
-      return generateMonthlyData(groupedData, startDate, endDate);
+      return await generateMonthlyData(groupedData, startDate, endDate);
     default:
       return { labels: Object.keys(groupedData), data: Object.values(groupedData) };
   }
 }
 
-function generateDailyData(groupedData, startDate, days, showMonth) {
+async function convertAndFormatAmount(convertedValue) {
+  const baseCurrency = '€';
+  const rate = await currencyService.getExchangeRate(baseCurrency, selectedCurrency.value);
+
+  let amount = convertedValue;
+  if (rate) {
+    amount *= rate;
+  }
+
+  return amount.toFixed(2);
+}
+
+async function generateDailyData(groupedData, startDate, days, showMonth) {
   const labels = [];
   const data = [];
   for (let i = 0; i < days; i++) {
@@ -175,32 +197,45 @@ function generateDailyData(groupedData, startDate, days, showMonth) {
     day.setDate(startDate.getDate() + i);
     const label = showMonth ? `${day.getDate()}/${day.getMonth() + 1}` : `${day.getDate()}`;
     labels.push(label);
-    data.push(groupedData[label] || 0);
+
+    var convertedValue = 0;
+    if (groupedData[label]) {
+      convertedValue = await convertAndFormatAmount(groupedData[label])
+    }
+    data.push(convertedValue);
   }
   return { labels, data };
 }
 
-function generateWeeklyData(groupedData, startDate, endDate) {
+async function generateWeeklyData(groupedData, startDate, endDate) {
   const labels = [];
   const data = [];
   let startOfWeek = new Date(startDate);
   while (startOfWeek <= endDate) {
     const label = getWeekLabel(startOfWeek);
     labels.push(label);
-    data.push(groupedData[label] || 0);
+    var convertedValue = 0;
+    if (groupedData[label]) {
+      convertedValue = await convertAndFormatAmount(groupedData[label])
+    }
+    data.push(convertedValue);
     startOfWeek.setDate(startOfWeek.getDate() + 7);
   }
   return { labels, data };
 }
 
-function generateMonthlyData(groupedData, startDate, endDate) {
+async function generateMonthlyData(groupedData, startDate, endDate) {
   const labels = [];
   const data = [];
   let currentMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
   while (currentMonth <= endDate) {
     const label = getMonthLabel(currentMonth);
     labels.push(label);
-    data.push(groupedData[label] || 0);
+    var convertedValue = 0;
+    if (groupedData[label]) {
+      convertedValue = await convertAndFormatAmount(groupedData[label])
+    }
+    data.push(convertedValue);
     currentMonth.setMonth(currentMonth.getMonth() + 1);
   }
   return { labels, data };
