@@ -36,11 +36,9 @@ async function convertAndFormatAmount() {
   formattedAmount.value = formatter.format(amount).replace(/\.00$/, '');
 }
 
-// Convert and format the amount when the component is mounted
 onMounted(() => {
   convertAndFormatAmount();
 });
 
-// Recompute the formatted amount if the selected currency changes
 watch(() => props.selectedCurrency, convertAndFormatAmount);
 </script>

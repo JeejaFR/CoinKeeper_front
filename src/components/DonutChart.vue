@@ -44,7 +44,6 @@ const chartData = ref({
   ]
 });
 
-// Options du graphique
 const chartOptions = ref({
   responsive: true,
   plugins: {

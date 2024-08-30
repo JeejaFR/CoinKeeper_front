@@ -83,7 +83,7 @@ const selectedPeriod = ref('Cette semaine');
 const drawer = ref(false);
 const transactions = ref([]);
 const totalAmount = ref(0);
-const convertedAmount = ref(0); // Montant converti
+const convertedAmount = ref(0);
 
 function clearSelection() {
   selectedPeriod.value = 'Cette semaine';

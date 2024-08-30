@@ -25,7 +25,6 @@ const selectedCurrency = computed({
   get: () => currencyStore.selectedCurrency,
 });
 
-// Props reçues du parent
 const props = defineProps({
   transactions: {
     type: Array,
@@ -91,7 +90,6 @@ function formatAmount(amount) {
 
 }
 
-// Watcher pour détecter les changements dans les transactions
 watch(
   () => props.transactions,
   () => {

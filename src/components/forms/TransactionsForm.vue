@@ -66,7 +66,6 @@ const isNewTransaction = computed(() => props.editedIndex < 0);
 
 const displayAmount = ref(0);
 
-// Catégories par défaut
 const defaultCategories = [
   'Alimentation',
   'Logement',
@@ -100,7 +99,6 @@ watch(() => props.editedItem, convertAmountToSelectedCurrency, { immediate: true
 
 // Mettre à jour `displayAmount` lors de l'enregistrement sans modifier pendant l'édition
 async function Sauvegarder() {
-  // Validation des champs
   if (
     !props.editedItem.description ||
     !props.editedItem.amount ||
