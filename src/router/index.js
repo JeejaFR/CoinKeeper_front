@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router/auto";
 import { routes } from "./routes";
+import authService from "@/services/authService";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,12 +8,18 @@ const router = createRouter({
 });
 
 // Ajouter une navigation globale pour vérifier l'authentification
-router.beforeEach((to, from, next) => {
-  const isAuthenticated = !!localStorage.getItem('authToken');
+router.beforeEach(async (to, from, next) => {
+  const token = localStorage.getItem('authToken');
 
-  if (to.meta.requiresAuth && !isAuthenticated) {
+  if (!token && to.meta.requiresAuth) {
+    return next({ name: 'Auth' });
+  }
+  
+  const isTokenValid = await authService.isTokenValid(token);
+
+  if (to.meta.requiresAuth && !isTokenValid) {
     next({ name: 'Auth' });
-  } else if (to.meta.requiresGuest && isAuthenticated) {
+  } else if (to.meta.requiresGuest && isTokenValid) {
     next({ name: 'Home' });
   } else {
     next();

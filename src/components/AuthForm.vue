@@ -136,7 +136,7 @@ async function register() {
   try {
     const data = await authService.register(payload);
     
-    if (data.body.token) {
+    if (data.token) {
       localStorage.setItem('authToken', data.token);
       router.push({ name: 'Home' });
     }

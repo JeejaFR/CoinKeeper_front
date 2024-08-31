@@ -1,9 +1,9 @@
 <template>
   <div class="appbarContainer">
     <!-- Notifications Button -->
-    <v-menu min-width="250px" rounded class="notificationMenu">
+    <v-menu width="250px" rounded class="notificationMenu">
       <template v-slot:activator="{ props }">
-        <v-btn icon v-bind="props" variant="text">
+        <v-btn icon v-bind="props" variant="text" @click="getNotifications">
           <v-badge color="error" :content="notificationsList.length">
             <v-icon>mdi-bell</v-icon>
           </v-badge>
@@ -17,12 +17,12 @@
               @click.stop="removeNotification(notification.id)">
               <div class="notificationContainer">
                 <div class="infoContainer">
-                  <v-list-item-icon>
+                  <v-list-item-icon class="iconContainer">
                     <v-icon :class="notification.iconClass">{{ notification.icon }}</v-icon>
                   </v-list-item-icon>
                   <v-list-item-content>
-                    <v-list-item-title>{{ notification.title }}</v-list-item-title>
-                    <v-list-item-subtitle>{{ notification.subtitle }}</v-list-item-subtitle>
+                    <v-list-item-title class="truncate-text">{{ notification.content }}</v-list-item-title>
+                    <v-list-item-subtitle>{{ notification.date }}</v-list-item-subtitle>
                   </v-list-item-content>
                 </div>
                 <v-list-item-action>
@@ -89,6 +89,8 @@ import { useRouter } from 'vue-router';
 import { useTheme } from 'vuetify'
 import { useCurrencyStore } from '@/stores/currencyStore';
 import authService from '@/services/authService';
+import notificationService from '@/services/notificationService';
+
 
 const router = useRouter();
 const theme = useTheme();
@@ -111,21 +113,43 @@ const darkTheme = computed(() => {
   return theme.global.current.value.dark;
 });
 
-// Notifications Menu Data
-const notificationsList = ref([
-  { id: 1, title: 'Danger Notification', subtitle: 'Something went wrong!', icon: 'mdi-alert', iconClass: 'text-red' },
-  { id: 2, title: 'Warning Notification', subtitle: 'This is a warning!', icon: 'mdi-alert-outline', iconClass: 'text-yellow' },
-  { id: 3, title: 'Success Notification', subtitle: 'Operation successful!', icon: 'mdi-check-circle', iconClass: 'text-green' },
-]);
+const notificationsList = ref([]);
 
 const currencies = ['€', '$', '£', '¥'];
+
+async function getNotifications(){
+  const notifications = await notificationService.getNotifications();
+
+  notificationsList.value = notifications.map(notification => {
+    const { icon, iconClass } = getNotificationIcon(notification.type);
+    return {
+      ...notification,
+      icon,
+      iconClass
+    };
+  });
+}
+
+function getNotificationIcon(type) {
+  switch (type) {
+    case 0:
+      return { icon: 'mdi-check-circle', iconClass: 'text-green' };
+    case 1:
+      return { icon: 'mdi-information-outline', iconClass: 'text-blue' };
+    case 2:
+      return { icon: 'mdi-alert', iconClass: 'text-red' };
+    default:
+      return { icon: 'mdi-information', iconClass: 'text-blue' };
+  }
+}
 
 function toggleDarkMode() {
   theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
 }
 
-function removeNotification(id) {
+async function removeNotification(id) {
   notificationsList.value = notificationsList.value.filter(notification => notification.id !== id);
+  await notificationService.deleteNotification(id);
 }
 
 function logout() {
@@ -137,6 +161,9 @@ function logout() {
 <style scoped>
 .v-avatar {
   cursor: pointer;
+}
+.v-list-item{
+  padding: 0!important;
 }
 
 .notificationContainer {
@@ -150,7 +177,7 @@ function logout() {
   display: flex;
   justify-content: left;
   align-items: center;
-  gap: 1rem;
+  gap: 5px;
 }
 
 .notificationCard {
@@ -163,7 +190,12 @@ function logout() {
   align-items: center;
   padding: 1rem;
 }
-
+.truncate-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
 .ml-2 {
   margin-left: 0.5rem;
 }

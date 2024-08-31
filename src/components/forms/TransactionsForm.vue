@@ -101,8 +101,8 @@ watch(() => props.editedItem, convertAmountToSelectedCurrency, { immediate: true
 async function Sauvegarder() {
   if (
     !props.editedItem.description ||
-    !props.editedItem.amount ||
-    props.editedItem.amount <= 0 ||
+    !displayAmount ||
+    displayAmount <= 0 ||
     !props.editedItem.category ||
     !props.editedItem.date
   ) {

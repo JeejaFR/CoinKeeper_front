@@ -1,10 +1,7 @@
-import {jwtDecode} from 'jwt-decode';
-import axios from 'axios';
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
 
-const url = 'http://localhost:2000';
-
-
-// TODO Verifier le token a chaque page (savoir s'il est encore bon)
+const url = "http://localhost:2000";
 
 const authService = {
   login: async (payload) => {
@@ -25,15 +22,31 @@ const authService = {
       throw error;
     }
   },
+  isTokenValid: async (token) => {
+    try {
+      const response = await axios.get(`${url}/checkToken`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.data.valid) {
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la verification du token", error);
+      throw error;
+    }
+  },
   decodeToken: (token) => {
     try {
       const decoded = jwtDecode(token);
       return decoded;
     } catch (error) {
-      console.error('Erreur lors de la décodage du token:', error);
+      console.error("Erreur lors de la décodage du token:", error);
       return null;
     }
-  }
+  },
 };
 
 export default authService;
