@@ -3,7 +3,7 @@
   <section class="transactionsContainer" :class="drawer?'littleContainer':''">
     <AppBar />
     <div class="transactionTitle">
-      <h1>Dépenses</h1>
+      <h1>Transactions</h1>
       <div class="selectContainer">
         <v-select v-model="selectedPeriod" :items="periodOptions" label="Période" variant="solo" dense
           class="custom-select">
@@ -17,7 +17,7 @@
     </div>
     <v-card class="dataTable">
       <div class="dataTableContainer">
-        <DataTable :transactions="transactions" />
+        <DataTable :transactions="transactions" :periode="selectedPeriod"/>
       </div>
     </v-card>
   </section>
@@ -28,7 +28,11 @@ import { ref, onMounted, watch, computed } from 'vue';
 import DataTable from '@/components/DataTableCrud.vue';
 import AppBar from '@/components/AppBar.vue';
 import transactionService from '@/services/transactionService.js';
+import { emitBus } from '@/plugins/eventBus';
 
+function triggerNotification() {
+  emitBus('notificationEvent');
+}
 
 const periodOptions = [
   'Cette semaine',
@@ -61,6 +65,7 @@ async function getTransactionByPeriode() {
 
 onMounted(() => {
   getTransactionByPeriode();
+  triggerNotification();
 });
 
 watch(selectedPeriod, () => {

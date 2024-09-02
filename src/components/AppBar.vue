@@ -10,7 +10,12 @@
         </v-btn>
       </template>
       <v-card class="notificationCard">
-        <v-card-title>Notifications</v-card-title>
+        <div class="d-flex justify-space-between align-center pl-5 pr-5">
+          <span>Notifications</span>
+          <v-btn icon @click="removeAllNotifications" title="Supprimer toutes les notifications" variant="text">
+            <v-icon>mdi-delete-sweep</v-icon>
+          </v-btn>
+        </div>
         <v-card-text>
           <v-list v-if="notificationsList.length > 0">
             <v-list-item v-for="notification in notificationsList" :key="notification.id"
@@ -22,7 +27,7 @@
                   </v-list-item-icon>
                   <v-list-item-content>
                     <v-list-item-title class="truncate-text">{{ notification.content }}</v-list-item-title>
-                    <v-list-item-subtitle>{{ notification.date }}</v-list-item-subtitle>
+                    <v-list-item-subtitle>{{ notification.formattedDate }}</v-list-item-subtitle>
                   </v-list-item-content>
                 </div>
                 <v-list-item-action>
@@ -84,13 +89,17 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTheme } from 'vuetify'
 import { useCurrencyStore } from '@/stores/currencyStore';
 import authService from '@/services/authService';
 import notificationService from '@/services/notificationService';
+import { on } from '@/plugins/eventBus';
 
+onMounted(() => {
+  on('notificationEvent', getNotifications);
+});
 
 const router = useRouter();
 const theme = useTheme();
@@ -117,7 +126,7 @@ const notificationsList = ref([]);
 
 const currencies = ['€', '$', '£', '¥'];
 
-async function getNotifications(){
+async function getNotifications() {
   const notifications = await notificationService.getNotifications();
 
   notificationsList.value = notifications.map(notification => {
@@ -125,9 +134,26 @@ async function getNotifications(){
     return {
       ...notification,
       icon,
-      iconClass
+      iconClass,
+      formattedDate: formatDate(notification.date)
     };
   });
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleString('fr-FR', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+}
+
+async function removeAllNotifications() {
+  notificationsList.value = [];
+  await notificationService.deleteAllNotifications();
 }
 
 function getNotificationIcon(type) {
@@ -162,8 +188,9 @@ function logout() {
 .v-avatar {
   cursor: pointer;
 }
-.v-list-item{
-  padding: 0!important;
+
+.v-list-item {
+  padding: 0 !important;
 }
 
 .notificationContainer {
@@ -173,7 +200,7 @@ function logout() {
   padding: 4% 0% 5% 0%;
 }
 
-.infoContainer{
+.infoContainer {
   display: flex;
   justify-content: left;
   align-items: center;
@@ -190,12 +217,14 @@ function logout() {
   align-items: center;
   padding: 1rem;
 }
+
 .truncate-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 200px;
 }
+
 .ml-2 {
   margin-left: 0.5rem;
 }

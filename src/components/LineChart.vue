@@ -100,10 +100,10 @@ async function groupDataByPeriod(transactions, period) {
     case 'Cette semaine':
       startDate = getStartOfWeek(now);
       endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 6);
+      endDate.setDate(startDate.getDate() + 7);
       break;
     case '2 dernières semaines':
-      startDate = new Date(now.setDate(now.getDate() - 14));
+      startDate = new Date(now.setDate(now.getDate() - 13));
       endDate = new Date();
       break;
     case 'Ce mois-ci':
@@ -111,7 +111,7 @@ async function groupDataByPeriod(transactions, period) {
       endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       break;
     case '6 derniers mois':
-      startDate = new Date(now.setMonth(now.getMonth() - 6));
+      startDate = new Date(now.getFullYear(), now.getMonth() - 5, 1);
       endDate = new Date();
       break;
     case 'Cette année':
@@ -138,7 +138,7 @@ async function groupDataByPeriod(transactions, period) {
 
 function getStartOfWeek(date) {
   const startOfWeek = new Date(date);
-  startOfWeek.setDate(date.getDate() - date.getDay());
+  startOfWeek.setDate(date.getDate() - date.getDay() + 1);
   return startOfWeek;
 }
 

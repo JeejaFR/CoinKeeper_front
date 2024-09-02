@@ -18,6 +18,11 @@
           title="Transactions" 
           @click="navigateTo('Transactions')">
         </v-list-item>
+        <v-list-item 
+          prepend-icon="mdi-shape-plus" 
+          title="Catégories" 
+          @click="navigateTo('Categories')">
+        </v-list-item>
       </v-list>
 
       <v-divider></v-divider>
@@ -105,10 +110,6 @@ function closeDrawer(){
 
 .v-list-item {
   transition: background-color 0.3s ease;
-}
-
-.v-list-item:hover {
-  background-color: #444444;
 }
 
 .v-icon {

@@ -36,6 +36,22 @@ const notificationService = {
       throw error;
     }
   },
+deleteAllNotifications: async () => {
+    try {
+      const response = await axios.delete(
+        `${url}/notifications/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erreur lors de la suppresion des notifications", error);
+      throw error;
+    }
+  },
 };
 
 export default notificationService;

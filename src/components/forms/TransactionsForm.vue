@@ -1,7 +1,7 @@
 <template>
   <v-card>
     <v-card-title>
-      <span class="text-h5">{{ isNewTransaction ? "Ajout d'une dépense" : "Modification d'une dépense" }}</span>
+      <span class="text-h5">{{ isNewTransaction ? "Ajout d'une transaction" : "Modification d'une transaction" }}</span>
     </v-card-title>
     <v-card-text>
       <v-container>
@@ -14,7 +14,7 @@
               :rules="[rules.required, rules.positive]"></v-text-field>
           </v-col>
           <v-col cols="12" md="6" sm="6">
-            <v-combobox v-model="editedItem.category" label="Catégorie" :items="mergedCategories"
+            <v-combobox v-model="editedItem.category" label="Catégorie" :items="categories"
               :rules="[rules.required]"></v-combobox>
           </v-col>
           <v-col cols="12" md="6" sm="6">
@@ -37,10 +37,16 @@
 </template>
 
 <script setup>
-import { ref, computed, defineEmits, defineProps, watch } from 'vue';
+import { ref, computed, defineEmits, onMounted, defineProps, watch } from 'vue';
 import transactionService from '@/services/transactionService';
+import categorieService from '@/services/categorieService';
 import currencyService from '@/services/currencyService';
 import { useCurrencyStore } from '@/stores/currencyStore';
+import { emitBus } from '@/plugins/eventBus';
+
+function triggerNotification() {
+  emitBus('notificationEvent');
+}
 
 const emit = defineEmits(['close', 'create', 'update']);
 
@@ -61,27 +67,9 @@ const props = defineProps({
 
 const currencyStore = useCurrencyStore();
 const selectedCurrency = computed(() => currencyStore.selectedCurrency);
-
 const isNewTransaction = computed(() => props.editedIndex < 0);
-
+const categories = ref([]);
 const displayAmount = ref(0);
-
-const defaultCategories = [
-  'Alimentation',
-  'Logement',
-  'Transports',
-  'Loisirs',
-  'Santé',
-  'Éducation',
-  'Vacances',
-  'Autres',
-];
-
-// Fusionner les catégories par défaut avec celles fournies via props
-const mergedCategories = computed(() => {
-  const uniqueCategories = new Set([...defaultCategories, ...props.categories]);
-  return Array.from(uniqueCategories);
-});
 
 const rules = {
   required: (value) => !!value || 'Ce champ est requis.',
@@ -96,6 +84,15 @@ async function convertAmountToSelectedCurrency() {
 
 // Appeler la conversion uniquement lors de l'ouverture du formulaire
 watch(() => props.editedItem, convertAmountToSelectedCurrency, { immediate: true });
+
+async function getCategories() {
+  try {
+    const response = await categorieService.getCategories();
+    categories.value = response.map(categorie => categorie.name);;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des categories:', error);
+  }
+}
 
 // Mettre à jour `displayAmount` lors de l'enregistrement sans modifier pendant l'édition
 async function Sauvegarder() {
@@ -118,6 +115,7 @@ async function Sauvegarder() {
     try {
       const newTransaction = await transactionService.createTransaction({ ...props.editedItem, amount: props.editedItem.amount });
       emit('create', newTransaction);
+      triggerNotification();
     } catch (error) {
       console.error('Erreur lors de la création de la transaction:', error);
     }
@@ -125,9 +123,14 @@ async function Sauvegarder() {
     try {
       const updatedTransaction = await transactionService.updateTransaction(props.editedItem.id, { ...props.editedItem, amount: props.editedItem.amount });
       emit('update', props.editedItem);
+      triggerNotification();
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la transaction:', error);
     }
   }
 }
+
+onMounted(() => {
+  getCategories();
+});
 </script>

@@ -41,4 +41,6 @@ onMounted(() => {
 });
 
 watch(() => props.selectedCurrency, convertAndFormatAmount);
+watch(() => props.amount, convertAndFormatAmount);
+
 </script>

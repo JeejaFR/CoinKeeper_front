@@ -62,7 +62,12 @@ import DataTable from '@/components/DataTable.vue';
 import AppBar from '@/components/AppBar.vue';
 import transactionService from '@/services/transactionService.js';
 import { useCurrencyStore } from '@/stores/currencyStore';
-import currencyService from '@/services/currencyService.js'; // Un service hypothétique pour obtenir les taux de conversion
+import currencyService from '@/services/currencyService.js';
+import { emitBus } from '@/plugins/eventBus';
+
+function triggerNotification() {
+  emitBus('notificationEvent');
+}
 
 const currencyStore = useCurrencyStore();
 
@@ -113,6 +118,7 @@ async function convertCurrency() {
 
 onMounted(() => {
   getTransactionByPeriode();
+  triggerNotification();
 });
 
 watch(selectedPeriod, () => {

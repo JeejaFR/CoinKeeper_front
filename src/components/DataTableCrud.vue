@@ -3,7 +3,7 @@
     <template v-slot:top>
       <!-- Toolbar for Actions -->
       <v-toolbar flat>
-        <v-toolbar-title>Gestion des Dépenses {{ selectedItems.length > 1 ? '(' + selectedItems.length + 'sélectionnées) ' : ''}} </v-toolbar-title>
+        <v-toolbar-title>Gestion des transactions {{ selectedItems.length > 1 ? '(' + selectedItems.length + 'sélectionnées) ' : ''}} </v-toolbar-title>
         <v-spacer></v-spacer>
 
         <!-- Add New Transaction Button -->
@@ -11,7 +11,7 @@
           <template v-slot:activator="{ props }">
             <v-btn class="mb-2" color="primary" dark v-bind="props" @click="openForm()"
               :disabled="selectedItems.length > 0">
-              Ajouter une dépense
+              Ajouter une transaction
             </v-btn>
           </template>
           <TransactionsForm :editedItem="editedItem" :editedIndex="editedIndex" :categories="uniqueCategories"
@@ -20,12 +20,12 @@
 
         <!-- Edit Selected Transactions Button -->
         <v-btn class="mb-2 mx-2" color="warning" dark @click="editSelectedItems()" v-if="selectedItems.length === 1">
-          Modifier la dépense
+          Modifier la transaction
         </v-btn>
 
         <!-- Delete Selected Transactions Button -->
         <v-btn class="mb-2" color="error" dark @click="deleteSelectedItems()" v-if="selectedItems.length > 0">
-          Supprimer {{ selectedItems.length }} dépense(s)
+          Supprimer {{ selectedItems.length }} transaction(s)
         </v-btn>
         <v-btn class="mb-2 mx-2" color="primary" icon="mdi-export-variant" dark @click="exportToCSV">
         </v-btn>
@@ -88,6 +88,11 @@ import transactionService from '@/services/transactionService';
 import currencyService from '@/services/currencyService.js';
 import TransactionsForm from '@/components/forms/TransactionsForm.vue';
 import AsyncAmount from '@/components/AsyncAmount';
+import { emitBus } from '@/plugins/eventBus';
+
+function triggerNotification() {
+  emitBus('notificationEvent');
+}
 
 const currencyStore = useCurrencyStore();
 
@@ -100,6 +105,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  periode: {
+    type: String,
+    required: true,
+  }
 });
 
 const dialog = ref(false);
@@ -150,28 +159,6 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false },
 ];
 
-async function formatAmount(amount) {
-  const baseCurrency = '€';
-  console.log("ICI : " + selectedCurrency.value);
-  const rate = await currencyService.getExchangeRate(baseCurrency, selectedCurrency.value)
-
-  console.log('amount: ' + amount);
-  console.log('rate: ' + rate)
-
-  if (rate) {
-    amount = amount * rate;
-  }
-
-  const formatter = new Intl.NumberFormat('fr-FR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-
-  const formattedAmount = formatter.format(amount);
-
-  return formattedAmount.endsWith('.00') ? formattedAmount.slice(0, -3) : formattedAmount;
-}
-
 async function exportToCSV() {
   const csvRows = [];
 
@@ -184,14 +171,9 @@ async function exportToCSV() {
     if (rate) {
       amount *= rate;
     }
-    const formattedAmount = new Intl.NumberFormat('fr-FR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount).replace(/\.00$/, '');
-
     const values = [
       transaction.description,
-      formattedAmount,
+      transaction.amount,
       transaction.category,
       formatDate(transaction.date),
     ];
@@ -209,7 +191,6 @@ async function exportToCSV() {
   link.click();
   document.body.removeChild(link);
 }
-
 
 function openForm() {
   creating.value = true;
@@ -240,6 +221,7 @@ async function deleteItemConfirm() {
   await transactionService.deleteTransaction(props.transactions[editedIndex.value].id);
   props.transactions.splice(editedIndex.value, 1);
   closeDelete();
+  triggerNotification();
 }
 
 async function deleteSelectedItems() {
@@ -261,9 +243,11 @@ function closeDelete() {
   dialogDelete.value = false;
 }
 
-function createTransaction(newTransaction) {
-  // TODO verifier si entre les dates entrées
-  props.transactions.push(newTransaction);
+async function createTransaction(newTransaction) {
+  const isTransactionInPeriode = transactionService.isTransactionInPeriode(newTransaction,props.periode);
+  if(isTransactionInPeriode){
+    props.transactions.push(newTransaction);
+  }
   closeForm();
 }
 
