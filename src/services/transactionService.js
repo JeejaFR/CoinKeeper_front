@@ -3,29 +3,33 @@ import axios from "axios";
 const url = "http://localhost:2000";
 const token = localStorage.getItem("authToken");
 
+function nameToInt(periode, isPassed){
+  var periodeToInt = isPassed ? 11 : 5; // 'Tout' par default
+  switch (periode) {
+    case "Cette semaine":
+      periodeToInt = isPassed ? 6 : 0;
+      break;
+    case "2 dernières semaines":
+      periodeToInt = isPassed ? 7 : 1;
+      break;
+    case "Ce mois-ci":
+      periodeToInt = isPassed ? 8 : 2;
+      break;
+    case "6 derniers mois":
+      periodeToInt = isPassed ? 9 : 3;
+      break;
+    case "Cette année":
+      periodeToInt = isPassed ? 10 : 4;
+      break;
+    default:
+      break;
+  }
+  return periodeToInt;
+}
+
 const transactionService = {
-  getTransactionParPeriode: async (periode) => {
-    var periodeToInt = 5; // par défault tout
-    switch (periode) {
-      case "Cette semaine":
-        periodeToInt = 0;
-        break;
-      case "2 dernières semaines":
-        periodeToInt = 1;
-        break;
-      case "Ce mois-ci":
-        periodeToInt = 2;
-        break;
-      case "6 derniers mois":
-        periodeToInt = 3;
-        break;
-      case "Cette année":
-        periodeToInt = 4;
-        break;
-      default:
-        periodeToInt = 5;
-        break;
-    }
+  getTransactionParPeriode: async (periode, isPassed) => {
+    var periodeToInt = nameToInt(periode, isPassed);
     try {
       const response = await axios.get(
         `${url}/transactions/periode/${periodeToInt}`,

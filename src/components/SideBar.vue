@@ -94,6 +94,7 @@ function closeDrawer(){
   left: 0;
   top: 0;
   height: 100%;
+  z-index: 9999;
 }
 
 .toolbar {

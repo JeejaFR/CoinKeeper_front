@@ -41,4 +41,15 @@ function switchComponent(){
   align-items: center;
   justify-content: center;
 }
+
+/* Styles pour les petits écrans (Mobile) */
+@media (max-width: 600px) {
+  .imageContainer {
+    width: 0;
+  }
+  .loginCard {
+  width: 100%;
+  height: 100%;
+}
+}
 </style>

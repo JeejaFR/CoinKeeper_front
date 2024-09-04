@@ -55,7 +55,7 @@ function clearSelection() {
 
 async function getTransactionByPeriode() {
   try {
-    const response = await transactionService.getTransactionParPeriode(selectedPeriod.value);
+    const response = await transactionService.getTransactionParPeriode(selectedPeriod.value, false);
     transactions.value = response; 
     totalAmount.value = transactions.value.reduce((sum, transaction) => sum + transaction.amount, 0);
   } catch (error) {
@@ -74,9 +74,10 @@ watch(selectedPeriod, () => {
 </script>
 
 <style scoped>
-.littleContainer{
-  width: 85%;
-  margin-left: 16%;
+.littleContainer {
+  position: absolute;
+  right: 0;
+  width: 80%;
 }
 .transactionsContainer {
   padding: 0rem 2rem 2rem 2rem;
@@ -95,5 +96,60 @@ watch(selectedPeriod, () => {
 
 .custom-select {
   min-width: 200px;
+}
+
+/* Styles pour les écrans moyens (Tablette) */
+@media (max-width: 1024px) {
+  .transactionsContainer {
+    padding: 1rem;
+  }
+
+  .transactionTitle {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .selectContainer {
+    width: 50%;
+    margin-top: 0rem;
+  }
+
+  .dataTable {
+    width: 100%;
+  }
+
+  .littleContainer {
+    position: absolute;
+    right: 0;
+    width: 72%;
+  }
+}
+
+/* Styles pour les petits écrans (Mobile) */
+@media (max-width: 600px) {
+  .transactionsContainer {
+    padding: 1rem;
+  }
+
+  .transactionTitle {
+    font-size: 1.5rem;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .selectContainer {
+    width: 100%;
+    margin-top: 0rem;
+  }
+
+  .custom-select {
+    width: 100%;
+  }
+
+  .dataTable {
+    width: 100%;
+    margin-top: 1rem;
+  }
 }
 </style>

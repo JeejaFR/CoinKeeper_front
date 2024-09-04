@@ -16,7 +16,7 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue';
+import { defineProps, computed } from 'vue';
 
 const props = defineProps({
   title: {
@@ -41,7 +41,10 @@ const props = defineProps({
   },
 });
 
-const trendColor = props.trendValue.startsWith('-') ? 'red' : 'green';
+const trendColor = computed(() => {
+  return props.trendValue.startsWith('-') ? 'red' : 'green';
+});
+ 
 </script>
 
 <style scoped>

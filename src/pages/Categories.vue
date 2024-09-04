@@ -136,8 +136,9 @@ onMounted(() => {
 }
 
 .littleContainer {
-  width: 85%;
-  margin-left: 16%;
+  position: absolute;
+  right: 0;
+  width: 80%;
 }
 
 .categoriesContainer {
@@ -167,5 +168,78 @@ onMounted(() => {
 
 .v-container {
   margin-top: 1rem;
+}
+
+/* Styles pour les écrans moyens (Tablette) */
+@media (max-width: 1024px) {
+  .categoriesContainer {
+    padding: 1rem;
+  }
+
+  .categorieTitle {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .selectContainer {
+    width: 50%;
+    margin-top: 1rem;
+  }
+
+  .custom-select {
+    width: 100%;
+  }
+
+  .gridContainer {
+    margin-top: 1rem;
+  }
+
+  .addButtonContainer {
+    justify-content: flex-start;
+  }
+
+  .littleContainer {
+    position: absolute;
+    right: 0;
+    width: 72%;
+  }
+}
+
+/* Styles pour les petits écrans (Mobile) */
+@media (max-width: 600px) {
+  .categoriesContainer {
+    padding: 1rem;
+  }
+
+  .categorieTitle {
+    font-size: 1.5rem;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .selectContainer {
+    width: 100%;
+    margin-top: 1rem;
+  }
+
+  .custom-select {
+    width: 100%;
+  }
+
+  .gridContainer {
+    width: 100%;
+    margin-top: 1rem;
+  }
+
+  .addButtonContainer {
+    justify-content: center;
+    margin-top: 1rem;
+  }
+
+  .littleContainer {
+    width: 100%;
+    margin-left: 0;
+  }
 }
 </style>

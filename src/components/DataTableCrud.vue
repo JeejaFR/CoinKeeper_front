@@ -300,4 +300,63 @@ watch(dialogDelete, (val) => {
   background-color: #e0e0e0;
   /* Light grey on hover */
 }
+/* Styles for medium screens (Tablet) */
+@media (max-width: 1024px) {
+  .filter-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .search-bar {
+    max-width: 100%;
+    margin-right: 0;
+    width: 100%;
+  }
+
+  .chips-group {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* Styles for small screens (Mobile) */
+@media (max-width: 600px) {
+  .filter-container {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.5rem;
+  }
+
+  .search-bar {
+    max-width: 100%;
+    margin-right: 0;
+    width: 100%;
+  }
+
+  .chips-group {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* Toolbar adjustments */
+  .v-toolbar-title {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .v-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .v-toolbar > * {
+    margin-bottom: 0.5rem;
+    width: 100%;
+  }
+
+  .v-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
 </style>

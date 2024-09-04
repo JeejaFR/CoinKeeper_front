@@ -61,7 +61,7 @@ const emits = defineEmits(['edit', 'delete']);
 
 async function getTransactions() {
   try {
-    const transactions = await transactionService.getTransactionParPeriode(props.periode);
+    const transactions = await transactionService.getTransactionParPeriode(props.periode, false);
     totalDepense.value = transactions
       .filter(transaction => transaction.category === props.categorie.name)
       .reduce((sum, transaction) => sum + transaction.amount, 0);
