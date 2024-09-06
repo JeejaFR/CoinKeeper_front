@@ -20,7 +20,7 @@
       </v-if>
 
       <div v-if="isLogin">
-        <div class="passwordContainer">
+        <div class="passwordContainer" style="display: none">
           <v-spacer></v-spacer>
           <v-btn text @click="forgotPassword" class="forgotPassword">
             Mot de passe oublié ?
@@ -47,7 +47,7 @@
 <script setup>
 import { ref, defineProps, computed, watch } from 'vue';
 import { useRouter } from 'vue-router'; 
-import authService from '../services/authService';
+import authService from '@/services/authService';
 
 const router = useRouter();
 
@@ -70,6 +70,7 @@ const emailRules = [
 const passwordRules = [
   (v) => !!v || 'Mot de passe requis',
   (v) => (v && v.length >= 8) || 'Le mot de passe doit contenir au moins 8 caractères',
+  (v) => (v && /[a-z]/.test(v)) || 'Le mot de passe doit contenir au moins une lettre minuscule',
   (v) => (v && /[A-Z]/.test(v)) || 'Le mot de passe doit contenir au moins une lettre majuscule',
   (v) => (v && /[0-9]/.test(v)) || 'Le mot de passe doit contenir au moins un chiffre',
 ];

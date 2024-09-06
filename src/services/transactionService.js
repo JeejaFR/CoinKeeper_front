@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const url = "http://localhost:2000";
+const url = import.meta.env.VITE_BACKEND_URL;
 const token = localStorage.getItem("authToken");
 
 function nameToInt(periode, isPassed){

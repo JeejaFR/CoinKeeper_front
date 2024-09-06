@@ -12,7 +12,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import AuthForm from '../components/AuthForm.vue'
+import AuthForm from '../components/forms/AuthForm.vue'
 
 var isLogin = ref(true);
 

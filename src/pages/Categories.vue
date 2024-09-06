@@ -16,7 +16,7 @@
       </div>
     </div>
     <div class="addButtonContainer">
-      <v-btn class="addButton" color="primary" dark @click="dialog=true;">
+      <v-btn class="addButton" color="primary" dark @click="dialog = true;">
         Ajouter une catégorie
       </v-btn>
     </div>
@@ -43,7 +43,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="grey darken-1" text @click="dialogDelete = false">Annuler</v-btn>
+        <v-btn color="grey darken-1" text @click="dialogDelete = false;">Annuler</v-btn>
         <v-btn color="red darken-1" text @click="deleteCategorie">Confirmer</v-btn>
       </v-card-actions>
     </v-card>
@@ -51,7 +51,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import AppBar from '@/components/AppBar.vue';
 import { emitBus } from '@/plugins/eventBus';
 import categorieService from '@/services/categorieService.js';

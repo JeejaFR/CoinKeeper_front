@@ -1,7 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 
-const url = "http://localhost:2000";
+const url = import.meta.env.VITE_BACKEND_URL;
 
 const authService = {
   login: async (payload) => {

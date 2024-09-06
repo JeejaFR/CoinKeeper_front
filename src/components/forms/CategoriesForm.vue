@@ -13,6 +13,7 @@
             <v-text-field v-model="displayAmount" :label="`Limite mensuelle (${selectedCurrency})`" type="number"
               :rules="[rules.required, rules.positive]"></v-text-field>
           </v-col>
+          <span class="erreurMessage" v-if="errorMessage">Une catégorie avec ce nom, existe déjà</span>
         </v-row>
       </v-container>
     </v-card-text>
@@ -54,6 +55,7 @@ const props = defineProps({
 });
 
 const currencyStore = useCurrencyStore();
+const errorMessage = ref(false);
 const selectedCurrency = computed(() => currencyStore.selectedCurrency);
 
 const isNewCategorie = computed(() => props.editedIndex < 0);
@@ -97,10 +99,14 @@ async function Sauvegarder() {
   if (isNewCategorie.value) {
     try {
       const newCategorie = await categorieService.createCategorie({ ...props.editedItem, month_limit: props.editedItem.month_limit });
-      console.log("newCategorie: "+JSON.stringify(newCategorie,null,2));
       emit('create', newCategorie);
       triggerNotification();
     } catch (error) {
+      errorMessage.value = true;
+      setTimeout(() => {
+        errorMessage.value = false;
+      }, 2000);
+      
       console.error('Erreur lors de la création de la categorie:', error);
     }
   } else {
@@ -109,8 +115,24 @@ async function Sauvegarder() {
       emit('update', props.editedItem);
       triggerNotification();
     } catch (error) {
+      errorMessage.value = true;
+      setTimeout(() => {
+        errorMessage.value = false;
+      }, 2000);
       console.error('Erreur lors de la mise à jour de la categorie:', error);
     }
   }
 }
+
 </script>
+
+<style scoped>
+  .erreurMessage{
+    color: red;
+    font-size: 0.7rem;
+    margin-left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+
+  }
+</style>
